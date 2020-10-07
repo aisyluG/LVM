@@ -8,8 +8,6 @@ class Figure(ABC):
         self._name = name
         self.x = x
         self.y = y
-        self.enters = []
-        self.outs = []
         self.checked = False
         self.connections = []
 
@@ -40,6 +38,19 @@ class Figure(ABC):
     def addConnection(self, figure):
         pass
 
+    def isClass(self, class_):
+        if class_ == Figure:
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return self._name
+
+    def delConnection(self, figure):
+        if figure in self.connections:
+            self.connections.remove(figure)
+
 
 
 class AndOrFigure(Figure):
@@ -47,6 +58,7 @@ class AndOrFigure(Figure):
         super().__init__(*args, **kwargs)
         self.r = 15
         self.brush = QBrush(Qt.lightGray, Qt.SolidPattern)
+        self.ex = None
 
     def paint(self, painter):
         painter.setBrush(self.brush)
@@ -66,14 +78,24 @@ class AndOrFigure(Figure):
             return False
 
     def addConnection(self, figure: Figure):
-        if figure.__class__ == EventFigure:
+        if figure.isClass(StateFigure):
             self.connections.append(figure)
             return True
         else:
             return False
 
+    def isClass(self, class_):
+        if class_ == Figure or class_ == AndOrFigure:
+            return True
+        else:
+            return False
 
-class EventFigure(Figure):
+    def set_ex(self, figure):
+        self.ex = figure
+
+
+
+class StateFigure(Figure):
     def __init__(self, color, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.width = 40
@@ -96,7 +118,7 @@ class EventFigure(Figure):
             return False
 
     def addConnection(self, figure: Figure):
-        if figure.__class__ == AndOrFigure:
+        if figure.isClass(AndOrFigure) and len(self.connections) < 2:
             self.connections.append(figure)
             return True
         else:
@@ -105,15 +127,75 @@ class EventFigure(Figure):
     def set_name(self, text:str):
         self._name = text
 
-class IniEventFigure(EventFigure):
+    def isClass(self, class_):
+        if class_ == Figure or class_ == StateFigure:
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return 'StateFigure'
+
+class IniStateFigure(StateFigure):
     def __init__(self, color, *args, **kwargs):
         super().__init__(color,*args, **kwargs)
         self.color = color
         self.probability = 0
 
     def setProbability(self, p):
-        self.probability = p
+        self.probability = float(p)
 
     def paint(self, painter):
         super().paint(painter)
         painter.drawText(self.x+self.width/2, self.y + self.height/2, 25, 10, Qt.AlignCenter, str(self.probability))
+
+    def isClass(self, class_):
+        if class_ == Figure or class_ == StateFigure or class_ == IniStateFigure:
+            return True
+        else:
+            return False
+
+    def addConnection(self, figure: Figure):
+        if figure.isClass(AndOrFigure) and len(self.connections) == 0:
+            self.connections.append(figure)
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return 'IniStateFigure'
+
+class DangStateFigure(StateFigure):
+    def __init__(self, color, *args, **kwargs):
+        super().__init__(color, *args, **kwargs)
+        self.color = color
+        self.probability = 0
+        self.cost = 0
+
+    def setProbability(self, p):
+        self.probability = float(p)
+
+    def setCost(self, c):
+        print(c)
+        self.cost = float(c)
+
+    def paint(self, painter):
+        super().paint(painter)
+        painter.drawText(self.x + self.width / 2, self.y + self.height / 2, 25, 10, Qt.AlignCenter,
+                         '{0:.2f}'.format(self.probability))
+
+    def isClass(self, class_):
+        if class_ == Figure or class_ == StateFigure or class_ == DangStateFigure:
+            return True
+        else:
+            return False
+
+    def addConnection(self, figure: Figure):
+        if figure.isClass(AndOrFigure) and len(self.connections) == 0:
+            self.connections.append(figure)
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return 'DangStateFigure'
